@@ -11,13 +11,16 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'usuario'  => 'required',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        // Busca por usuario O por correo
+        $user = User::where('usuario', $request->usuario)
+                    ->orWhere('correo', $request->usuario)
+                    ->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->contra)) {
             return response()->json(['message' => 'Credenciales incorrectas'], 401);
         }
 
@@ -26,7 +29,12 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login correcto',
             'token'   => $token,
-            'user'    => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'user'    => [
+                'id'        => $user->id,
+                'usuario'   => $user->usuario,
+                'rol'       => $user->rol,
+                'id_tienda' => $user->id_tienda,
+            ],
         ]);
     }
 
@@ -35,7 +43,6 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Bienvenido al dashboard',
             'user'    => $request->user(),
-            // aquí luego metemos los datos reales del inventario
         ]);
     }
 
